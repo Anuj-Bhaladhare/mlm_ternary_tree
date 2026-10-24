@@ -1,0 +1,279 @@
+Task: Rebuild User Registration and Login System (ADMIN and MEMBER Roles)
+
+Act as a senior full-stack developer. Inspect my existing MLM Management System project and recreate or modify the current user registration, login, authentication, and authorization processes to implement the requirements below.
+
+Important: Do not create a separate demo project or replace my existing architecture. Work within the existing codebase, reuse its framework, database, authentication libraries, coding conventions, and UI components wherever appropriate.
+
+1. First, inspect the existing project
+
+Before making changes:
+
+Identify the frontend framework, backend framework, database, ORM, and authentication mechanism.
+Inspect the existing user, account, user_roles, and other related database tables, entities, models, and migrations.
+Review existing registration, login, session/token management, password hashing, middleware, and role-based access control.
+Identify existing routes, API endpoints, frontend pages, and validation logic.
+Determine how the current ADMIN and MEMBER roles are represented.
+Check the existing .env configuration and environment variable loading.
+Preserve existing MLM business logic, relationships, and unrelated features.
+
+After inspection, implement the changes directly in the existing project.
+
+2. User roles
+
+The application must support exactly these two application roles:
+
+ADMIN
+MEMBER
+
+Use the existing role system if it is suitable. Otherwise, implement a consistent role-based authorization system.
+
+The backend must enforce permissions. Hiding frontend buttons or pages alone is not sufficient.
+
+3. ADMIN registration using a secret key
+
+Create or modify the ADMIN registration page to include these fields:
+
+Email
+Password
+Confirm Password
+Secret Key
+
+The secret key must be configured through the backend environment file:
+
+ADMIN_CREATION_KEY=your_16_character_secret_key
+
+
+Use a strong, randomly generated secret of at least 16 characters. Do not commit the real secret to source control.
+
+Registration workflow
+The user opens the ADMIN registration page.
+The user enters their email, password, confirm password, and secret key.
+The frontend performs basic validation.
+The backend independently validates all submitted data.
+The backend compares the submitted secret key against ADMIN_CREATION_KEY loaded from the server environment.
+If the secret key is invalid, reject registration with a generic, user-friendly error.
+If the secret key is valid, check whether the email already exists.
+Hash the password securely using the project's existing password-hashing library, or a suitable secure algorithm such as Argon2id or bcrypt.
+Create the user with the ADMIN role.
+Return a successful response and redirect the user to the appropriate login page or dashboard, following the existing authentication design.
+ADMIN registration security requirements
+Never expose ADMIN_CREATION_KEY to the frontend.
+Never hardcode the secret key in frontend code, source files, or API responses.
+Never log the submitted secret key or password.
+Validate the secret key only on the backend.
+Fail safely if ADMIN_CREATION_KEY is missing or empty; do not allow ADMIN creation in that situation.
+Prevent duplicate email registrations.
+Use environment-variable validation at application startup.
+Add rate limiting to sensitive registration endpoints.
+Do not store passwords or secret keys in plaintext.
+Do not allow clients to choose their role by submitting arbitrary role values.
+Ensure that the ADMIN registration endpoint cannot be bypassed by calling the API directly.
+Never return password hashes or other sensitive authentication data.
+
+Important authorization rule: The secret key authorizes ADMIN account creation only. It must not automatically grant access to existing ADMIN accounts or bypass login authentication.
+
+4. MEMBER registration by an ADMIN only
+
+Members must not have public self-registration.
+
+Only an authenticated ADMIN can create MEMBER accounts.
+
+ADMIN workflow
+The ADMIN logs in using their registered email and password.
+The ADMIN opens the Member Management section.
+The ADMIN selects "Create Member".
+The system displays a form containing:
+Member name, if supported by the existing schema.
+Member email or username, depending on the existing project.
+Initial password, either securely generated or entered by the ADMIN.
+Any other fields required by the existing MLM business logic.
+The backend validates the request and verifies that the requester is authenticated and has the ADMIN role.
+The backend securely hashes the initial password.
+The backend creates the MEMBER account with the MEMBER role.
+The system displays the member's login ID and an appropriate one-time credential-sharing workflow.
+Member account security
+The MEMBER role must always be assigned by the backend.
+An ADMIN must not be able to create another ADMIN through the member creation endpoint.
+Reject unauthenticated requests and requests from MEMBER accounts.
+Enforce unique login identifiers.
+Never return stored password hashes.
+Prefer generating a temporary initial password and requiring the member to change it at first login.
+If the system displays an initial password once, do not store or log it in plaintext.
+Do not expose an existing member's password when viewing or editing member details.
+
+Preserve any existing MLM-specific fields and relationships, such as sponsor/referral IDs, member positions, account relationships, and other required business data.
+
+5. MEMBER login
+
+Members must log in using the credentials provided by the ADMIN.
+
+Login workflow
+The MEMBER opens the login page.
+The MEMBER enters their assigned login ID/email and password.
+The backend validates the submitted credentials.
+The backend verifies the password against the stored password hash.
+If valid, the system creates the project's normal authenticated session or token.
+The backend loads the user's actual role from trusted database data.
+The MEMBER is redirected to the MEMBER dashboard.
+If credentials are invalid, display a generic error message without revealing whether the account exists.
+
+The login process must support both ADMIN and MEMBER accounts without mixing their permissions.
+
+6. ADMIN login
+
+ADMINs must log in using their registered email and password.
+
+After successful authentication:
+
+Verify credentials on the backend.
+Retrieve the actual role from the database.
+Establish the authenticated session or token using the existing secure authentication mechanism.
+Redirect the ADMIN to the ADMIN dashboard.
+Protect ADMIN-only pages and APIs with server-side authorization.
+
+Do not use the secret key as a login password or require the secret key during ordinary login.
+
+7. Authentication and authorization
+
+Review and implement the following safeguards:
+
+Secure password hashing and verification.
+Session management or secure token handling consistent with the existing application.
+Appropriate cookie security settings if cookie-based sessions are used.
+CSRF protection where applicable.
+Input validation and sanitization.
+Rate limiting for login and registration attempts.
+Generic authentication error messages.
+Protection against privilege escalation and role manipulation.
+Authentication middleware for protected routes.
+ADMIN-only middleware for member management and other privileged operations.
+Proper logout behavior and session/token invalidation where applicable.
+Appropriate database transactions and constraints.
+Safe error handling without exposing stack traces or secrets in production.
+
+If the project already has authentication infrastructure, improve and reuse it instead of unnecessarily introducing a second authentication system.
+
+8. Frontend changes
+
+Modify the existing UI to provide:
+
+ADMIN registration page
+Email
+Password
+Confirm Password
+Secret Key
+Password visibility toggle
+Client-side validation
+Loading state and clear success/error messages
+Link to the login page
+Login page
+Login ID/email
+Password
+Password visibility toggle
+Loading state
+Generic invalid-credentials message
+Role-appropriate navigation after login
+ADMIN dashboard
+Member Management page
+Create Member form
+Member list
+Member details and appropriate account status
+Safe member-management actions supported by the existing application
+MEMBER dashboard
+A dedicated member experience
+Access only to MEMBER-authorized pages and operations
+Password change functionality, especially for temporary initial passwords
+
+Keep the existing visual design, layout, component library, and responsive behavior wherever possible.
+
+9. Database changes and migrations
+
+Inspect the current database schema before modifying it.
+
+Reuse existing user and role tables where appropriate.
+Add migrations only when necessary.
+Ensure email/login identifiers are unique.
+Ensure role assignments are consistent.
+Preserve foreign key constraints and existing MLM relationships.
+Avoid destructive migrations and unnecessary table truncation.
+Do not delete existing production data.
+Ensure migrations can be applied safely to an existing database.
+If the project already has an established role model, do not introduce a conflicting second role system.
+
+Use the correct table and column names discovered in the project rather than assuming a new schema.
+
+10. Environment configuration
+
+Add the following variable to .env.example:
+
+ADMIN_CREATION_KEY=replace_with_a_strong_random_secret
+
+
+Requirements:
+
+Keep the real .env file out of version control.
+Ensure .env.example contains only a placeholder.
+Verify that the backend loads the variable correctly.
+Validate the variable on startup.
+Fail closed when it is absent.
+Never print the secret value in logs or error responses.
+
+Do not overwrite unrelated environment variables or existing application configuration.
+
+11. Testing requirements
+
+Implement or update tests for these scenarios:
+
+ADMIN registration
+Valid secret key creates an ADMIN account.
+Invalid secret key is rejected.
+Missing server secret prevents ADMIN registration.
+Duplicate email is rejected.
+Password and confirm password mismatch is rejected.
+Password is securely hashed.
+Client-supplied role cannot bypass the intended registration rules.
+MEMBER creation
+Authenticated ADMIN can create a MEMBER.
+MEMBER cannot create another account through the ADMIN-only endpoint.
+Unauthenticated requests are rejected.
+MEMBER creation cannot assign the ADMIN role.
+Duplicate login identifiers are rejected.
+Initial credentials are handled securely.
+Login and access control
+Valid ADMIN credentials authenticate successfully.
+Valid MEMBER credentials authenticate successfully.
+Invalid passwords are rejected.
+ADMIN can access ADMIN-authorized routes.
+MEMBER cannot access ADMIN-authorized routes.
+Unauthenticated users cannot access protected routes.
+Logout invalidates the appropriate session or token.
+
+Run the existing test suite and relevant database migrations where possible. Fix regressions caused by the changes.
+
+12. Implementation expectations
+
+Do not stop after providing a plan or sample code. Implement the feature in the existing project.
+
+Follow this workflow:
+
+Inspect the project and identify the relevant files.
+Summarize the existing authentication architecture and proposed changes.
+Implement backend validation, registration, login, and authorization.
+Implement frontend forms and role-specific navigation.
+Add or update database migrations only when needed.
+Update environment examples and configuration validation.
+Add tests and run relevant checks.
+Review the final changes for security problems and regressions.
+
+Do not rewrite unrelated modules or replace the existing framework. Do not remove existing MLM functionality.
+
+At the end, provide a concise report containing:
+
+Files created or modified.
+Registration and login flow implemented.
+Database migrations required.
+Environment variables that must be configured.
+Commands needed to run migrations, tests, and the application.
+Any issues that could not be resolved or verified.
+
+Final goal: Deliver a working authentication system in which ADMIN accounts can be registered only with the server-side secret key, ADMINs create MEMBER accounts, and both roles can log in securely with strictly enforced role-based permissions.

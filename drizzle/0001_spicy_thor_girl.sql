@@ -1,0 +1,1 @@
+ALTER TYPE "public"."member_position" ADD VALUE 'MIDDLE' BEFORE 'RIGHT';
