@@ -23,7 +23,7 @@ export default defineConfig({
         process.env.BETTER_AUTH_SECRET ||
         "replace-with-at-least-32-random-characters-before-use",
       // BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-      BETTER_AUTH_URL: "https://mlm-ternary-tree.vercel.app/"
+      BETTER_AUTH_URL: "https://mlm-ternary-tree.vercel.app"
     },
   },
   resolve: {
