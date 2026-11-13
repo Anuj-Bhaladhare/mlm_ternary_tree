@@ -25,6 +25,7 @@ export default defineConfig({
       // BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
       BETTER_AUTH_URL: "https://mlm-ternary-tree.vercel.app"
     },
+    
   },
   resolve: {
     alias: {
