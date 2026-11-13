@@ -18,15 +18,7 @@ export const createMemberSchema = z
       .max(32)
       .regex(/^[A-Z0-9][A-Z0-9_-]*$/),
     name: z.string().trim().min(2).max(120),
-    email: z
-      .union([z.email(), z.literal(""), z.null()])
-      .optional()
-      .transform((value) => {
-        if (typeof value !== "string" || value.trim() === "") {
-          return null;
-        }
-        return value.trim().toLowerCase();
-      }),
+    email: z.string().trim().toLowerCase().pipe(z.email()),
     sponsorId: z.union([z.uuid(), z.literal("")]).optional(),
     parentId: z.union([z.uuid(), z.literal("")]).optional(),
     position: z.union([z.enum(placementPositions), z.literal("")]).optional(),

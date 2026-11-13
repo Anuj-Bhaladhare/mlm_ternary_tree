@@ -37,12 +37,12 @@ describe("resolvePlacement", () => {
 });
 
 describe("createMemberSchema", () => {
-  it("normalizes member data and converts empty values to null", () => {
+  it("normalizes member data and converts empty placement values to null", () => {
     expect(
       createMemberSchema.parse({
         memberCode: "  ab12-9 ",
         name: " Jane Doe ",
-        email: "",
+        email: "  Jane.Doe@Example.com ",
         sponsorId: "",
         parentId: "",
         position: "",
@@ -50,7 +50,7 @@ describe("createMemberSchema", () => {
     ).toEqual({
       memberCode: "AB12-9",
       name: "Jane Doe",
-      email: null,
+      email: "jane.doe@example.com",
       sponsorId: null,
       parentId: null,
       position: null,
@@ -61,6 +61,7 @@ describe("createMemberSchema", () => {
     const result = createMemberSchema.safeParse({
       memberCode: "M001",
       name: "Jane Doe",
+      email: "jane@example.com",
       parentId: "0d64f420-9af3-475a-8d5a-f58d7ef867d2",
     });
 
@@ -74,6 +75,7 @@ describe("createMemberSchema", () => {
     const result = createMemberSchema.safeParse({
       memberCode: "M001",
       name: "Jane Doe",
+      email: "jane@example.com",
       position: "LEFT",
     });
 
@@ -89,6 +91,7 @@ describe("createMemberSchema", () => {
       const result = createMemberSchema.safeParse({
         memberCode,
         name: "Jane Doe",
+        email: "jane@example.com",
       });
       expect(result.success).toBe(false);
     }
@@ -101,6 +104,17 @@ describe("createMemberSchema", () => {
       email: "not-an-email",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("requires a valid email address for account creation", () => {
+    for (const email of [undefined, "", null]) {
+      const result = createMemberSchema.safeParse({
+        memberCode: "M1001",
+        name: "Jane Doe",
+        email,
+      });
+      expect(result.success).toBe(false);
+    }
   });
 
   it("rejects invalid UUIDs for parentId or sponsorId", () => {
@@ -138,6 +152,7 @@ describe("createMemberSchema", () => {
       const parsed = createMemberSchema.parse({
         memberCode: "M1001",
         name: "Jane Doe",
+        email: "jane@example.com",
         parentId,
         position,
       });

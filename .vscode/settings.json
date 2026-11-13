@@ -1,15 +1,20 @@
 {
     "sqltools.connections": [
         {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
             "ssh": "Disabled",
             "previewLimit": 50,
-            "server": "localhost",
+            "server": "ep-shiny-mud-bdsfuopv-pooler.c-8.us-east-2.aws.neon.tech",
             "port": 5432,
             "driver": "PostgreSQL",
-            "database": "mlm_management_new",
-            "username": "postgres",
-            "password": "Anuj@905298",
-            "name": "mlm management new"
+            "name": "MLM Management Deployment",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "password": "npg_7gGroEn5yZsm"
         }
     ]
 }
