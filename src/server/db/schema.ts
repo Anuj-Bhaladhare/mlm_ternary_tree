@@ -31,10 +31,6 @@ export const users = pgTable(
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     email: text("email").notNull(),
-    // `loginId` is an administrator ID or a member code. It is deliberately
-    // separate from Better Auth's opaque primary key so it can be used as a
-    // human-facing sign-in identifier without exposing implementation IDs.
-    loginId: text("login_id"),
     isActive: boolean("is_active").notNull().default(true),
     passwordSetAt: timestamp("password_set_at", { withTimezone: true }),
     emailVerified: boolean("email_verified").notNull().default(false),
@@ -48,9 +44,6 @@ export const users = pgTable(
   },
   (table) => [
     uniqueIndex("user_email_unique").on(table.email),
-    uniqueIndex("user_login_id_unique")
-      .on(table.loginId)
-      .where(sql`${table.loginId} IS NOT NULL`),
   ],
 );
 

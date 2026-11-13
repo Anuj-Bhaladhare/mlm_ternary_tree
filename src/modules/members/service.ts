@@ -65,7 +65,6 @@ function mapUniqueConstraint(error: unknown): MemberDomainError | undefined {
         "The ternary tree already has a root member.",
       );
     case "members_member_code_unique":
-    case "user_login_id_unique":
       return new MemberDomainError(
         "MEMBER_CODE_TAKEN",
         "A member already uses that member code.",
@@ -295,7 +294,6 @@ export async function createMemberAccount(
         id: userId,
         name: input.name,
         email: input.email,
-        loginId: input.memberCode,
         isActive: true,
       });
 

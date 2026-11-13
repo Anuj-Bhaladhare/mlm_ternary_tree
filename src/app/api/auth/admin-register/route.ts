@@ -9,8 +9,6 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
 
-    console.log("BODYYYYY", body);
-
   } catch {
     return jsonError(
       400,
@@ -21,7 +19,6 @@ export async function POST(request: Request) {
   }
 
   const parsed = adminRegistrationSchema.safeParse(body);
-  console.log("parsed: ", parsed);
 
   if (!parsed.success) {
     return jsonError(

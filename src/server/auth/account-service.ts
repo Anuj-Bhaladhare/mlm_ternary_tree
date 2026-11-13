@@ -28,7 +28,6 @@ export class AccountDomainError extends Error {
       | "ADMIN_REGISTRATION_UNAVAILABLE"
       | "ADMIN_EMAIL_TAKEN"
       | "ADMIN_ALREADY_INITIALIZED"
-      | "ADMIN_IDENTITY_CONFLICT"
       | "INVALID_OR_EXPIRED_TOKEN"
       | "MEMBER_NOT_FOUND"
       | "MEMBER_ACCOUNT_NOT_FOUND"
@@ -58,7 +57,7 @@ export async function getAdministratorBootstrapStatus() {
   const [administrator] = await db
     .select({ passwordSetAt: users.passwordSetAt })
     .from(users)
-    .where(eq(users.loginId, env.ADMIN_ID))
+    .where(eq(users.email, env.ADMIN_EMAIL))
     .limit(1);
 
   return { initialized: Boolean(administrator?.passwordSetAt) };
@@ -110,34 +109,17 @@ export async function bootstrapAdministrator(input: {
     const [configuredUser] = await tx
       .select({
         id: users.id,
-        loginId: users.loginId,
         email: users.email,
         passwordSetAt: users.passwordSetAt,
       })
       .from(users)
-      .where(eq(users.loginId, env.ADMIN_ID))
+      .where(eq(users.email, env.ADMIN_EMAIL))
       .limit(1);
 
     if (configuredUser?.passwordSetAt) {
       throw new AccountDomainError(
         "ADMIN_ALREADY_INITIALIZED",
         "The predefined administrator has already been initialized.",
-      );
-    }
-
-    const [emailOwner] = await tx
-      .select({ id: users.id, loginId: users.loginId })
-      .from(users)
-      .where(eq(users.email, env.ADMIN_EMAIL))
-      .limit(1);
-
-    if (
-      emailOwner &&
-      (!configuredUser || emailOwner.id !== configuredUser.id)
-    ) {
-      throw new AccountDomainError(
-        "ADMIN_IDENTITY_CONFLICT",
-        "The configured administrator identity conflicts with an existing account.",
       );
     }
 
@@ -158,7 +140,6 @@ export async function bootstrapAdministrator(input: {
         id: userId,
         name: "Administrator",
         email: env.ADMIN_EMAIL,
-        loginId: env.ADMIN_ID,
         isActive: true,
         passwordSetAt: new Date(),
       });
@@ -193,7 +174,6 @@ export async function bootstrapAdministrator(input: {
         .update(users)
         .set({
           email: env.ADMIN_EMAIL,
-          loginId: env.ADMIN_ID,
           isActive: true,
           passwordSetAt: new Date(),
           updatedAt: new Date(),
@@ -227,7 +207,7 @@ export async function bootstrapAdministrator(input: {
       resourceType: "user",
       resourceId: userId,
       outcome: "success",
-      metadata: { loginId: env.ADMIN_ID },
+      metadata: { source: "configured_administrator_bootstrap" },
     });
 
     return { userId };
@@ -325,15 +305,18 @@ export async function registerAdministrator(input: {
 
 export async function resolveLoginEmail(identifier: string) {
   const normalizedIdentifier = normalizeIdentifier(identifier);
-  const [user] = await db
-    .select({ email: users.email })
-    .from(users)
-    .where(
-      normalizedIdentifier.includes("@")
-        ? eq(users.email, normalizedIdentifier)
-        : eq(users.loginId, normalizedIdentifier),
-    )
-    .limit(1);
+  const [user] = normalizedIdentifier.includes("@")
+    ? await db
+        .select({ email: users.email })
+        .from(users)
+        .where(eq(users.email, normalizedIdentifier))
+        .limit(1)
+    : await db
+        .select({ email: users.email })
+        .from(members)
+        .innerJoin(users, eq(members.userId, users.id))
+        .where(eq(members.memberCode, normalizedIdentifier))
+        .limit(1);
 
   return user?.email ?? null;
 }

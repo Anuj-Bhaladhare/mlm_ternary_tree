@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     await hashPassword(parsed.data.password);
     return invalidCredentials(requestId);
   }
-
+  console.log("=======================", email)
   const result = await auth.api.signInEmail({
     headers: request.headers,
     body: {
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     },
     asResponse: true,
   });
+  console.log("resultresultresultresult", result);
 
   if (!result.ok) {
     return invalidCredentials(requestId);

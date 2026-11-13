@@ -37,6 +37,8 @@ export function AdminRegistrationForm() {
         body: JSON.stringify(parsed.data),
       });
       const result = await response.json().catch(() => null);
+      console.log("result====result", result);
+      console.log("response====response", response);
 
       if (!response.ok) {
         setServerError(

@@ -56,15 +56,14 @@ export function handleApiError(error: unknown, requestId: string) {
         ? 404
         : error.code === "ADMIN_EMAIL_TAKEN"
           ? 409
-        : error.code === "ACCOUNT_EMAIL_TAKEN" ||
-            error.code === "ADMIN_ALREADY_INITIALIZED" ||
-            error.code === "ADMIN_IDENTITY_CONFLICT" ||
-            error.code === "PASSWORD_SETUP_REQUIRED"
-          ? 409
-          : error.code === "INVALID_OR_EXPIRED_TOKEN" ||
-              error.code === "ADMIN_BOOTSTRAP_UNAVAILABLE"
-            ? 400
-            : 422;
+          : error.code === "ACCOUNT_EMAIL_TAKEN" ||
+              error.code === "ADMIN_ALREADY_INITIALIZED" ||
+              error.code === "PASSWORD_SETUP_REQUIRED"
+            ? 409
+            : error.code === "INVALID_OR_EXPIRED_TOKEN" ||
+                error.code === "ADMIN_BOOTSTRAP_UNAVAILABLE"
+              ? 400
+              : 422;
 
     return jsonError(status, error.code, error.message, requestId);
   }

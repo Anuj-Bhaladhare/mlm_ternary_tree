@@ -30,6 +30,13 @@ describe("adminRegistrationSchema", () => {
         role: "administrator",
       }).success,
     ).toBe(false);
+
+    expect(
+      adminRegistrationSchema.safeParse({
+        ...validRegistration,
+        login_id: "ADMIN001",
+      }).success,
+    ).toBe(false);
   });
 
   it("enforces the application password length policy", () => {

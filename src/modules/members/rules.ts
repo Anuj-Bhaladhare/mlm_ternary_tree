@@ -18,9 +18,15 @@ export const createMemberSchema = z
       .max(32)
       .regex(/^[A-Z0-9][A-Z0-9_-]*$/),
     name: z.string().trim().min(2).max(120),
-    // Every newly provisioned member receives an authentication account, so an
-    // email is required even though older imported member rows may be empty.
-    email: z.email().transform((value) => value.trim().toLowerCase()),
+    email: z
+      .union([z.email(), z.literal(""), z.null()])
+      .optional()
+      .transform((value) => {
+        if (typeof value !== "string" || value.trim() === "") {
+          return null;
+        }
+        return value.trim().toLowerCase();
+      }),
     sponsorId: z.union([z.uuid(), z.literal("")]).optional(),
     parentId: z.union([z.uuid(), z.literal("")]).optional(),
     position: z.union([z.enum(placementPositions), z.literal("")]).optional(),
