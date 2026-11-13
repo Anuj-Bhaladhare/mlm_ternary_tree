@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import {
   ArrowDownLeft,
@@ -12,7 +13,15 @@ import {
 } from "lucide-react";
 import { getDashboardStats, listMembers } from "@/modules/members/service";
 
-export default async function DashboardPage() {
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+async function DashboardContent() {
   const [stats, recentMembers] = await Promise.all([
     getDashboardStats(),
     listMembers("", 5, 0),
@@ -359,6 +368,36 @@ export default async function DashboardPage() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardLoading() {
+  return (
+    <div
+      aria-label="Loading network dashboard"
+      aria-busy="true"
+      className="space-y-8"
+    >
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="space-y-2">
+          <div className="h-8 w-64 animate-pulse rounded bg-slate-200" />
+          <div className="h-4 w-96 max-w-full animate-pulse rounded bg-slate-100" />
+        </div>
+        <div className="h-10 w-48 animate-pulse rounded-lg bg-slate-100" />
+      </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div
+            key={index}
+            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-white"
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="h-80 animate-pulse rounded-xl border border-slate-200 bg-white" />
+        <div className="h-80 animate-pulse rounded-xl border border-slate-200 bg-white lg:col-span-2" />
       </div>
     </div>
   );
