@@ -24,7 +24,7 @@ const adminBootstrapEnvSchema = z.object({
     .max(64)
     .regex(/^[A-Za-z0-9][A-Za-z0-9_-]*$/)
     .transform((value) => value.toUpperCase()),
-  ADMIN_EMAIL: z.email().transform((value) => value.toLowerCase()),
+  ADMIN_EMAIL: z.string().trim().toLowerCase().pipe(z.email()),
   // This must be an independently generated secret. It is only accepted while
   // the predefined administrator has no password and is never sent to clients.
   ADMIN_SETUP_TOKEN: z.string().min(32),
@@ -38,6 +38,15 @@ const configuredAdminEnvSchema = z.object({
   APP_ADMIN_USER: z.string().trim().toLowerCase().pipe(z.email()),
   APP_ADMIN_PASSWORD: z.string().min(12).max(128),
 });
+
+export class AdminBootstrapConfigurationError extends Error {
+  constructor() {
+    super(
+      "Administrator bootstrap is not configured. Set ADMIN_ID, ADMIN_EMAIL, and ADMIN_SETUP_TOKEN.",
+    );
+    this.name = "AdminBootstrapConfigurationError";
+  }
+}
 
 export function getConfiguredAdminEnv(
   environment: Readonly<Record<string, string | undefined>> = process.env,
@@ -101,13 +110,13 @@ export function getServerEnv() {
   return result.data;
 }
 
-export function getAdminBootstrapEnv() {
-  const result = adminBootstrapEnvSchema.safeParse(process.env);
+export function getAdminBootstrapEnv(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+) {
+  const result = adminBootstrapEnvSchema.safeParse(environment);
 
   if (!result.success) {
-    throw new Error(
-      "Administrator bootstrap is not configured. Set ADMIN_ID, ADMIN_EMAIL, and ADMIN_SETUP_TOKEN.",
-    );
+    throw new AdminBootstrapConfigurationError();
   }
 
   return result.data;

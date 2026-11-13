@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getAdminCreationKey, getConfiguredAdminEnv } from "./env-config";
+import {
+  AdminBootstrapConfigurationError,
+  getAdminBootstrapEnv,
+  getAdminCreationKey,
+  getConfiguredAdminEnv,
+} from "./env-config";
 
 describe("configured administrator environment", () => {
   it("returns null when startup provisioning is not configured", () => {
@@ -52,5 +57,27 @@ describe("configured administrator environment", () => {
         APP_ADMIN_PASSWORD: password,
       }),
     ).toThrow(/12–128 character password/);
+  });
+
+  describe("administrator bootstrap configuration", () => {
+    it("normalizes the configured administrator identity", () => {
+    expect(
+      getAdminBootstrapEnv({
+        ADMIN_ID: "admin_01",
+        ADMIN_EMAIL: " ADMIN@example.com ",
+        ADMIN_SETUP_TOKEN: "a-random-bootstrap-secret-with-32-chars",
+      }),
+    ).toEqual({
+      ADMIN_ID: "ADMIN_01",
+      ADMIN_EMAIL: "admin@example.com",
+      ADMIN_SETUP_TOKEN: "a-random-bootstrap-secret-with-32-chars",
+    });
+    });
+
+    it("throws a typed configuration error when bootstrap settings are missing", () => {
+    expect(() => getAdminBootstrapEnv({})).toThrow(
+      AdminBootstrapConfigurationError,
+    );
+    });
   });
 });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { AccessError } from "@/server/auth/permissions";
 import { AccountDomainError } from "@/server/auth/account-service";
 import { MemberDomainError } from "@/modules/members/service";
+import { AdminBootstrapConfigurationError } from "@/lib/env-config";
 
 export function jsonError(
   status: number,
@@ -36,6 +37,15 @@ export function handleApiError(error: unknown, requestId: string) {
 
   if (error instanceof AccessError) {
     return jsonError(error.status, error.code, error.message, requestId);
+  }
+
+  if (error instanceof AdminBootstrapConfigurationError) {
+    return jsonError(
+      503,
+      "ADMIN_BOOTSTRAP_NOT_CONFIGURED",
+      "Administrator setup is unavailable until the server bootstrap settings are configured.",
+      requestId,
+    );
   }
 
   if (error instanceof MemberDomainError) {
