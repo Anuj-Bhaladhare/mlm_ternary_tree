@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { AlertCircle, CheckCircle, LoaderCircle, PlusCircle, X } from "lucide-react";
@@ -28,7 +29,7 @@ export function AddMemberDialog({
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activationUrl, setActivationUrl] = useState<string | null>(null);
-  const idempotencyKey = useRef<string | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
 
   const {
     register,
@@ -52,14 +53,15 @@ export function AddMemberDialog({
     setServerError(null);
     setSuccessMessage(null);
     setActivationUrl(null);
-    idempotencyKey.current ??= crypto.randomUUID();
+    const requestKey = idempotencyKey ?? crypto.randomUUID();
+    setIdempotencyKey(requestKey);
 
     try {
       const response = await fetch("/api/admin/members", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Idempotency-Key": idempotencyKey.current,
+          "Idempotency-Key": requestKey,
         },
         body: JSON.stringify({
           memberCode: data.memberCode.trim().toUpperCase(),
@@ -84,7 +86,7 @@ export function AddMemberDialog({
       const member = result.data.member;
       setSuccessMessage(`Member ${member.memberCode} (${member.name}) was placed and is pending activation.`);
       setActivationUrl(result.data.activationUrl ?? null);
-      idempotencyKey.current = null;
+      setIdempotencyKey(null);
       reset({
         memberCode: "",
         name: "",
@@ -109,7 +111,7 @@ export function AddMemberDialog({
           setServerError(null);
           setSuccessMessage(null);
           setActivationUrl(null);
-          idempotencyKey.current = null;
+          setIdempotencyKey(null);
           setSelectedParentId(defaultParentId ?? "");
           reset({
             memberCode: "",
@@ -127,7 +129,8 @@ export function AddMemberDialog({
         Add Member
       </button>
 
-      {isOpen && (
+      {isOpen &&
+        createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
           <div
             className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl sm:p-7"
@@ -354,7 +357,8 @@ export function AddMemberDialog({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

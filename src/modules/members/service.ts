@@ -544,6 +544,7 @@ export type TreeNode = {
   status: "PENDING" | "ACTIVE" | "SUSPENDED";
   createdAt: Date;
   depth: number;
+  hasChildren: boolean;
   leftCount?: number;
   middleCount?: number;
   rightCount?: number;
@@ -591,15 +592,18 @@ export async function getGenealogyTree(identifier?: string, maxDepth = 3): Promi
     status: "PENDING" | "ACTIVE" | "SUSPENDED";
     created_at: string;
     depth: number;
+    has_children: boolean;
   }>(sql`
     WITH RECURSIVE tree AS (
       SELECT
-        id, member_code, name, email, parent_id, position, is_root, status, created_at, 0 AS depth
+        id, member_code, name, email, parent_id, position, is_root, status, created_at, 0 AS depth,
+        EXISTS (SELECT 1 FROM members child WHERE child.parent_id = members.id) AS has_children
       FROM members
       WHERE id = ${rootId}
       UNION ALL
       SELECT
-        m.id, m.member_code, m.name, m.email, m.parent_id, m.position, m.is_root, m.status, m.created_at, t.depth + 1
+        m.id, m.member_code, m.name, m.email, m.parent_id, m.position, m.is_root, m.status, m.created_at, t.depth + 1,
+        EXISTS (SELECT 1 FROM members child WHERE child.parent_id = m.id) AS has_children
       FROM members m
       INNER JOIN tree t ON m.parent_id = t.id
       WHERE t.depth < ${maxDepth}
@@ -624,6 +628,7 @@ export async function getGenealogyTree(identifier?: string, maxDepth = 3): Promi
       status: row.status,
       createdAt: new Date(row.created_at),
       depth: Number(row.depth),
+      hasChildren: row.has_children,
       leftChild: null,
       middleChild: null,
       rightChild: null,
